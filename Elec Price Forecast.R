@@ -94,74 +94,8 @@ cycle1 <- arima(cycle0, order = c(1,0,1), seasonal = list(order = c(2,0,2))) # A
 grid.arrange(ggAcf(cycle1$res, lag = 24) + ggtitle("cycle1 ACF") + ylab(""), ggPacf(cycle1$res, lag = 24) + 
                    ggtitle("cycle1 PACF") + ylab(""))
 ## function that cross-validates monthly data specified by an arima order and outputs MAPE of p-ahead forecasts and MAPE of entire rolling LOOCV forecasts.
-MAPE_ARIMA <- function(data, train.set, test.set, model, p, arima.method) {
-   n <- length(test.set) - p + 1 # set number of loops
-   my_order <- arimaorder(model) # model arima order
-   fcst <- matrix(0, nrow = n, ncol = p) # empty matrix
-   test_end_floor <- as.numeric(floor(time(tail(train.set,1)))) # floor of most recent year
-   test_end_actual <- as.numeric(time(tail(train.set,1)))       # actual year
-   for(i in 1:n) {
-      w <- window(data, end = test_end_floor + if(test_end_actual == test_end_floor) {
-         (i-1)/12                                               # get window reflecting correct month
-      } else {
-         if(test_end_actual == test_end_floor + (1/12)) {
-            i/12
-         } else {
-            if(test_end_actual == test_end_floor + (2/12)) {
-               (i+1)/12
-            } else {
-               if(test_end_actual == test_end_floor + (3/12)) {
-                  (i+2)/12
-               } else {
-                  if(test_end_actual == test_end_floor + (4/12)) {
-                     (i+3)/12
-                  } else {
-                     if(test_end_actual == test_end_floor + (5/12)) {
-                        (i+4)/12
-                     } else {
-                        if(test_end_actual == test_end_floor + (6/12)) {
-                           (i+5)/12
-                        } else {
-                           if(test_end_actual == test_end_floor + (7/12)) {
-                              (i+6)/12
-                           } else {
-                              if(test_end_actual == test_end_floor + (8/12)) {
-                                 (i+7)/12
-                              } else {
-                                 if(test_end_actual == test_end_floor + (9/12)) {
-                                    (i+8)/12
-                                 } else {
-                                    if(test_end_actual == test_end_floor + (10/12)) {
-                                       (i+9)/12
-                                    } else {
-                                       if(test_end_actual == test_end_floor + (11/12)) {
-                                          (i+10)/12
-                                       } else {
-                                          stop("Time lengths incompatible")
-                                       }
-                                    }
-                                 }
-                              }
-                           }
-                        }
-                     }
-                  }
-               }
-            }
-         }
-      })
-      mod <- arima(w, order = my_order[1:3], seasonal = my_order[4:6], method = arima.method) # create arima model
-      fcst[i,] <- forecast(mod, h = p)$mean # get point forecasts of p periods ahead
-   }
-   perc_errors <- matrix(0, nrow = n, ncol = p) # empty matrix
-   for(i in 1:n) {
-      perc_errors[i,] <- (test.set[i:(i+p-1)] - fcst[i,])/test.set[i:(i+p-1)] # calculate error matrix given testing data set
-   }
-   MAPE_mod <- mean(abs(perc_errors))*100 # calculate mean average percentage error (MAPE) for all forecasts
-   MAPE_p <- mean(abs(perc_errors[,p]))*100 # calculate MAPE for all p-ahead forecasts
-   assign("MAPE_mod", MAPE_mod, envir = .GlobalEnv) # create object containing overall MAPE
-   assign("MAPE_p", MAPE_p, envir = .GlobalEnv) # create object containing p-ahead MAPE
-}
+source("mape_arima_monthly.R")
+
 MAPE_ARIMA(lelecp, train, test, cycle1, 12, "CSS-ML") # run function on first model
 MAPE1_mod <- MAPE_mod
 MAPE1_12 <- MAPE_p
@@ -210,8 +144,8 @@ plot(recresid(mod1$res ~ 1), pch = 16, main = "Recursive Residuals", ylab = "") 
 summary(mod1)
 
 # h) 12 Steps Ahead Forecast with Error Bands
-fcst <- forecast(mod1, h = 12) # 12 steps ahead forecast of model
-elecp_fcst <- exp(fcst$mean)   # Take exponent to get original price values
+fcst <- forecast(mod1, h = 12, lambda = 0) # 12 steps ahead forecast of model
+elecp_fcst <- fcst$mean
 
 elecp_fcst_upper95 <- exp(fcst$upper[,2]) # prediction interval bands of forecast
 elecp_fcst_lower95 <- exp(fcst$lower[,2])
@@ -336,6 +270,6 @@ plot(fore_GARCH, which = 1) # point forecasts plot
 plot(fore_GARCH, which = 3) # variance forecasts plot
 
 elecp_fcst2 <- t(exp(fore_GARCH@forecast$seriesFor))
-elecp_fcst2                  # point forecasts values (exponentiated)
+elecp_fcst2                     # forecasts are logged values
 t(fore_GARCH@forecast$sigmaFor) # variance forecasts
 
