@@ -12,6 +12,9 @@ There may be more testing that could be done to validate more forecasts beyond t
 
 ### References:
 https://fred.stlouisfed.org/series/APU000072610
+
 https://www.bls.gov/cpi/factsheets/average-prices.htm
+
 https://www.eia.gov/opendata/qb.php?category=461217&sdid=NG.N3020US3.M
+
 https://www.eia.gov/energyexplained/electricity/electricity-in-the-us.php
