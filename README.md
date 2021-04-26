@@ -1,4 +1,4 @@
-###__Background__
+### Background
 I am primarily using Electricity prices(in dollars per kilowatt hours) data from fred.st.louisfed.org which represents average electricity prices calculated with CPI to provide estimates based on the Department of Energy’s collection of mail questionnaires of 75 urban areas in the US. This dataset is observed monthly and spans from Nov 1978 to Jan 2020. I also make use of api data from eia.gov for the prices of natural gas sold to commercial consumers (dollars per thousand cubic feet) observed monthly from October 1983 to December 2019.
 
 ### Goal
